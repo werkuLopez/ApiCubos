@@ -2,6 +2,10 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Azure.Security.KeyVault.Secrets;
+using Azure.Identity;
+using Microsoft.Extensions.Configuration;
+using Azure.Storage.Blobs;
 
 namespace ApiCubos.Helpers
 {
@@ -11,15 +15,40 @@ namespace ApiCubos.Helpers
         public string Audience { get; set; }
         public string SecretKey { get; set; }
 
+        //private SecretClient client;
+        //private string storageKey;
+
+        //private BlobServiceClient clientBlobs;
+
+
         public HelperActionServicesOAuth(IConfiguration config)
         {
-            this.Issuer =
-                config.GetValue<string>("ApiOAuth:Issuer");
 
-            this.Audience =
-                config.GetValue<string>("ApiOAuth:Audience");
-            this.SecretKey =
-                config.GetValue<string>("ApiOAuth:SecretKey");
+            var keyVaultUri = config.GetValue<string>("KeyVault:VaultUri");
+
+            var secretClient = new SecretClient(new Uri(keyVaultUri), new DefaultAzureCredential());
+
+            this.Issuer = GetSecretValue(secretClient, "Issuer");
+            this.Audience = GetSecretValue(secretClient, "Audience");
+            this.SecretKey = GetSecretValue(secretClient, "SecretKey");
+            this.SecretKey = GetSecretValue(secretClient, "SecretKey");
+            //this.storageKey = GetSecretValue(secretClient, "StorageKey");
+
+        }
+
+        private string GetSecretValue(SecretClient secretClient, string secretName)
+
+        {
+            try
+            {
+                KeyVaultSecret secret = secretClient.GetSecret(secretName);
+                return secret.Value;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"No se pudo obtener el secreto '{secretName}' del Key Vault.", ex);
+            }
+
         }
 
         // necesitamos un método para generar el token que se basa en el secretKey

@@ -5,10 +5,27 @@ using Microsoft.EntityFrameworkCore;
 using NSwag.Generation.Processors.Security;
 using NSwag;
 using Swashbuckle.AspNetCore.SwaggerUI;
+using Microsoft.Extensions.Azure;
+using Azure.Security.KeyVault.Secrets;
+using Azure.Storage.Blobs;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
+
+builder.Services.AddAzureClients(factory =>
+{
+    factory.AddSecretClient
+    (builder.Configuration.GetSection("KeyVault"));
+});
+
+SecretClient secretClient =
+builder.Services.BuildServiceProvider().GetService<SecretClient>();
+KeyVaultSecret secret =
+    await secretClient.GetSecretAsync("SqlAzure");
+string conn = secret.Value;
+
 
 #region SERVICE OAUTH
 
@@ -32,7 +49,6 @@ builder.Services.AddAuthentication
 #region REPO
 
 builder.Services.AddTransient<CubosRepository>();
-string conn = builder.Configuration.GetConnectionString("SqlAzure");
 builder.Services.AddDbContext<CubosContext>(options =>
 {
     options.UseSqlServer(conn);

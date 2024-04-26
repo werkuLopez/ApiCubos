@@ -1,6 +1,7 @@
 ﻿using ApiCubos.Data;
 using ApiCubos.Models;
 using Microsoft.EntityFrameworkCore;
+using static System.Net.WebRequestMethods;
 
 namespace ApiCubos.Repositories
 {
@@ -41,12 +42,34 @@ namespace ApiCubos.Repositories
 
         public async Task<List<Cubo>> GetAllCubosAsync()
         {
-            return await this.context.Cubos.ToListAsync();
+            List<Cubo> cubos = await this.context.Cubos.ToListAsync();
+            List<Cubo> news = new List<Cubo>();
+
+            foreach (var item in cubos)
+            {
+                string img = "https://storageexamencubowerku.blob.core.windows.net/cubosexam/ " + item.Imagen;
+                item.Imagen = img;
+
+                news.Add(item);
+            }
+
+            return news;
         }
 
         public async Task<List<Cubo>> GetAllCubosByMarcaAsync(string marca)
         {
-            return await this.context.Cubos.Where(x => x.Marca == marca).ToListAsync();
+            List<Cubo> cubos = await this.context.Cubos.Where(x => x.Marca == marca).ToListAsync();
+            List<Cubo> news = new List<Cubo>();
+
+            foreach (var item in cubos)
+            {
+                string img = "https://storageexamencubowerku.blob.core.windows.net/cubosexam/ " + item.Imagen;
+                item.Imagen = img;
+
+                news.Add(item);
+            }
+
+            return news;
         }
 
         public async Task<Usuario> CreateUsuario(Usuario usuario)
